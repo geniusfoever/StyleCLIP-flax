@@ -169,7 +169,8 @@ class MappingNetwork(nn.Module):
                                 layer_name='label_embedding',
                                 dtype=self.dtype,
                                 rng=init_rng)(c.astype(jnp.float32))
-
+            print(y.shape)
+            print(x.shape)
             y = ops.normalize_2nd_moment(y)
             x = jnp.concatenate((x, y), axis=1) if x is not None else y
 
@@ -530,6 +531,7 @@ class SynthesisNetwork(nn.Module):
     clip_conv: float = None
     dtype: str = 'float32'
     rng: Any = random.PRNGKey(0)
+    height_multiplier: int = 2
 
     def setup(self):
         self.resolution_ = self.resolution
@@ -570,6 +572,12 @@ class SynthesisNetwork(nn.Module):
             const = random.normal(self.rng, (1, 4, 4, fmaps), dtype=self.dtype)
         else:
             const = jnp.array(self.param_dict_['const'], dtype=self.dtype)
+        if self.param_dict_ is None:
+            const = random.normal(self.rng, (1, 4 * self.height_multiplier, 4, fmaps), dtype=self.dtype)
+        else:
+            const = jnp.array(self.param_dict_['const'], dtype=self.dtype)
+            const = jnp.pad(const, ((0, 0), (0, 4 * self.height_multiplier -  jnp.array(self.param_dict_['const']).shape[1]), (0, 0), (0, 0)))
+       
         x = self.param(name='const', init_fn=lambda *_: const)
         x = jnp.repeat(x, repeats=dlatents_in.shape[0], axis=0)
 
@@ -597,7 +605,6 @@ class SynthesisNetwork(nn.Module):
                                   clip_conv=self.clip_conv,
                                   dtype=dtype,
                                   rng=init_key)(x, y, dlatents_in, noise_mode, rng)
-
         return y
 
 
