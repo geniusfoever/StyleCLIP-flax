@@ -748,5 +748,4 @@ class Generator(nn.Module):
                              dtype=self.dtype,
                              rng=self.init_rng_synthesis,
                              name='synthesis_network')(dlatents_in, noise_mode, rng)
-
         return x

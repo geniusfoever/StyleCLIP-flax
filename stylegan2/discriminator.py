@@ -7,6 +7,7 @@ from typing import Any, Tuple, List, Callable
 import h5py
 from . import ops
 from stylegan2 import utils
+import jax.image as jimg
 
 
 URLS = {'afhqcat': 'https://www.dropbox.com/s/qygbjkefyqyu9k9/stylegan2_discriminator_afhqcat.h5?dl=1',
@@ -105,6 +106,13 @@ class FromRGBLayer(nn.Module):
         Returns:
             (tensor): Output tensor of shape [N, H, W, out_channels].
         """
+                
+        # Assuming `image` is a 3D array representing the image
+        size = max(image.shape[:2])
+
+        # Resize the image using `jax.image.resize`
+        x = jimg.resize(x, (size, size), method='bilinear')
+
         w_shape = [self.kernel, self.kernel, x.shape[3], self.fmaps]
         w, b = ops.get_weight(w_shape, self.lr_multiplier, True, self.param_dict, 'fromrgb', self.rng)
 
