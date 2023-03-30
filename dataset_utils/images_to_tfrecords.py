@@ -128,7 +128,7 @@ def images_to_tfrecords(image_dir, data_dir, has_labels):
 
     writer.close()
 
-    dataset_info = {'num_examples': num_examples, 'num_classes': num_classes}
+    dataset_info = {'num_examples': num_examples, 'num_classes': num_classes,'height': height, 'width': width}
     with open(os.path.join(data_dir, 'dataset_info.json'), 'w') as fout:
         json.dump(dataset_info, fout)
 
