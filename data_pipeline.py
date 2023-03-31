@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
+Height_multiplier = 2
 def prefetch(dataset, n_prefetch):
     # Taken from: https://github.com/google-research/vision_transformer/blob/master/vit_jax/input_pipeline.py
     ds_iter = iter(dataset)
@@ -50,7 +50,7 @@ def get_data(data_dir, img_size, img_channels, num_classes, num_local_devices, b
         image = tf.reshape(image, shape=[height, width, channels])
         image = tf.cast(image, dtype='float32')
 
-        image = tf.image.resize(image, size=[img_size, img_size], method='bicubic', antialias=True)
+        # image = tf.image.resize(image, size=[img_size, img_size], method='bicubic', antialias=True)
         image = tf.image.random_flip_left_right(image)
         image = (image - 127.5) / 127.5
         label = tf.one_hot(example['label'], num_classes)
@@ -59,7 +59,7 @@ def get_data(data_dir, img_size, img_channels, num_classes, num_local_devices, b
     def shard(data):
         # Reshape images from [num_devices * batch_size, H, W, C] to [num_devices, batch_size, H, W, C]
         # because the first dimension will be mapped across devices using jax.pmap
-        data['image'] = tf.reshape(data['image'], [num_local_devices, -1, img_size, img_size, img_channels])
+        data['image'] = tf.reshape(data['image'], [num_local_devices, -1, img_size*Height_multiplier, img_size, img_channels])
         data['label'] = tf.reshape(data['label'], [num_local_devices, -1, num_classes])
         return data
 
@@ -70,10 +70,11 @@ def get_data(data_dir, img_size, img_channels, num_classes, num_local_devices, b
     # check resolution mismatch
     if not allow_resolution_mismatch:
         if 'width' in dataset_info and 'height' in dataset_info:
-            msg = 'Requested resolution {img_size} is different from input data {input_size}.' \
-                  ' Provide the flag --allow_resolution_mismatch in order to allow this behaviour.'
-            assert dataset_info['width'] == img_size, msg.format(img_size=img_size, input_size=dataset_info['width'])
-            assert dataset_info['height'] == img_size, msg.format(img_size=img_size, input_size=dataset_info['height'])
+            msg = 'Requested resolution {img_height}x{img_width} is different from input data {input_height}x{input_width}.' \
+              ' Provide the flag --allow_resolution_mismatch in order to allow this behaviour.'
+            assert dataset_info['width'] == img_size, msg.format(img_height=img_size*Height_multiplier, img_width=img_size, input_width=dataset_info['width'], input_height=dataset_info['height'])
+            assert dataset_info['height'] == img_size*Height_multiplier, msg.format(img_height=img_size*Height_multiplier, img_width=img_size,input_width=dataset_info['width'], input_height=dataset_info['height'])
+            # assert dataset_info['height'] == img_size, msg.format(img_size=img_size, input_size=dataset_info['height'])
         else:
             raise Exception(f'dataset_info.json does not contain keys "height" or "width". Ignore by providing --allow_resolution_mismatch.')
 

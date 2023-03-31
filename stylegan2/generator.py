@@ -253,12 +253,13 @@ class SynthesisLayer(nn.Module):
     clip_conv: float = None
     dtype: str = 'float32'
     rng: Any = random.PRNGKey(0)
+    height_multiplier: int = 2
 
     def setup(self):
         if self.param_dict is not None:
             noise_const = jnp.array(self.param_dict['noise_const'], dtype=self.dtype)
         else:
-            noise_const = random.normal(self.rng, shape=(1, 2 ** self.res, 2 ** self.res, 1), dtype=self.dtype)
+            noise_const = random.normal(self.rng, shape=(1, 2 ** self.res*self.height_multiplier, 2 ** self.res, 1), dtype=self.dtype)
         self.noise_const = self.variable('noise_consts', 'noise_const', lambda *_: noise_const)
 
     @nn.compact

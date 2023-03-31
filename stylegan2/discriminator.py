@@ -108,10 +108,10 @@ class FromRGBLayer(nn.Module):
         """
                 
         # Assuming `image` is a 3D array representing the image
-        size = max(image.shape[:2])
+        size = min(x.shape[1:3])
 
         # Resize the image using `jax.image.resize`
-        x = jimg.resize(x, (size, size), method='bilinear')
+        x = jimg.resize(x, (x.shape[0],size, size,x.shape[-1],), method='bilinear')
 
         w_shape = [self.kernel, self.kernel, x.shape[3], self.fmaps]
         w, b = ops.get_weight(w_shape, self.lr_multiplier, True, self.param_dict, 'fromrgb', self.rng)

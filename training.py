@@ -333,7 +333,7 @@ def train_and_evaluate(config):
             wandb.log({'training/epochs': epoch}, step=step)
 
         for batch in data_pipeline.prefetch(ds_train, config.num_prefetch):
-            assert batch['image'].shape[1] == config.batch_size, f"Mismatched batch (batch size: {config.batch_size}, this batch: {batch['image'].shape[1]})"
+            assert batch['image'].shape[1] == config.batch_size, f"Mismatched batch (batch size: {config.batch_size}, this batch: {batch['image'].shape})"
 
             # pbar.update(num_devices * config.batch_size)
             iteration_start_time = timer()
@@ -369,6 +369,8 @@ def train_and_evaluate(config):
             if config.G_reg_interval > 0 and step % config.G_reg_interval == 0:
                 H, W = batch['image'].shape[-3], batch['image'].shape[-2]
                 rng, key = jax.random.split(rng)
+                print('pl_noise shape', batch['image'].shape)
+                print("H and W", H, W)
                 pl_noise = jax.random.normal(key, batch['image'].shape, dtype=dtype) / np.sqrt(H * W)
                 state_G, metrics, pl_mean = p_regul_step_G(state_G, batch, z_latent1, pl_noise, pl_mean, metrics, rng=rkey)
 

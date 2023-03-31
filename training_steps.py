@@ -70,6 +70,7 @@ def regul_step_G(state_G, batch, z_latent, pl_noise, pl_mean, metrics, config, r
                                                       z_latent,
                                                       batch['label'],
                                                       mutable=['moving_stats'])
+
         
         pl_grads = jax.grad(lambda *args: jnp.sum(state_G.apply_synthesis(*args) * pl_noise), argnums=1)({'params': params['synthesis'],
                                                                                                           'noise_consts': state_G.noise_consts},
