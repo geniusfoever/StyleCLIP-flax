@@ -169,8 +169,8 @@ class MappingNetwork(nn.Module):
                                 layer_name='label_embedding',
                                 dtype=self.dtype,
                                 rng=init_rng)(c.astype(jnp.float32))
-            print(y.shape)
-            print(x.shape)
+            # print(y.shape)
+            # print(x.shape)
             y = ops.normalize_2nd_moment(y)
             x = jnp.concatenate((x, y), axis=1) if x is not None else y
 
